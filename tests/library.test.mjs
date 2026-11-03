@@ -5,9 +5,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { loadRegistry } from '../vendor/clawd-kit/src/core/registry-node.ts';
-import { gateComponent } from '../vendor/clawd-kit/src/core/gates.ts';
 import { CLAWD_INFO } from '../vendor/clawd-kit/src/styles/clawd/adapter.ts';
-import { clawdAnchorApi, clawdRenderBytes, setupClawdCanvas } from '../vendor/clawd-kit/scripts/lib/clawd-node.mjs';
+import { clawdRenderBytes, setupClawdCanvas } from '../vendor/clawd-kit/scripts/lib/clawd-node.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIR = path.join(ROOT, 'components', 'clawd');
@@ -20,15 +19,8 @@ test('every clawd library component loads through the AST gate with no errors', 
   assert.equal(registry.size, fs.readdirSync(DIR).filter((f) => f.endsWith('.ts')).length);
 });
 
-test('every clawd library component passes the full gate (scan, contract, determinism, draws something)', async () => {
-  setupClawdCanvas();
-  const { registry } = await loadRegistry('clawd', CLAWD_INFO.world, [{ dir: DIR, origin: 'library' }]);
-  for (const def of registry.values()) {
-    const file = fs.readdirSync(DIR).find((f) => f.endsWith('.ts') && fs.readFileSync(path.join(DIR, f), 'utf8').includes(`name: '${def.name}'`));
-    const r = gateComponent(fs.readFileSync(path.join(DIR, file), 'utf8'), file, def, 'clawd', CLAWD_INFO.world, clawdRenderBytes, clawdAnchorApi);
-    assert.deepEqual(r.errors, [], def.name);
-  }
-});
+// The full per-component gate is `npm run gate` (a separate CI step) — running it here too
+// doubles CI time and memory for no extra signal.
 
 test('ch_critter: every char × emotion and every enum option renders without throwing', async () => {
   setupClawdCanvas();
