@@ -1,0 +1,20 @@
+{
+  "name": "clawd-components",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Watercolour clawd component library for clawd-kit",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "prepare": "node scripts/sync-kit.mjs",
+    "pretest": "node scripts/sync-kit.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "gate": "node scripts/gate-all.mjs",
+    "gate:previews": "node scripts/gate-all.mjs --previews",
+    "index": "node scripts/refresh-index.mjs",
+    "index:previews": "node scripts/refresh-index.mjs --previews"
+  }
+}

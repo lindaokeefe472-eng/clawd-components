@@ -1,0 +1,6 @@
+node_modules/
+vendor/
+out/
+components/clawd/previews/
+*.log
+.DS_Store
