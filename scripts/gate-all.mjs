@@ -5,6 +5,7 @@
 //   node scripts/gate-all.mjs ch_critter ...  # only the named components
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gateComponent } from '../vendor/clawd-kit/src/core/gates.ts';
 import { validateComponentSource } from '../vendor/clawd-kit/src/core/security.ts';
@@ -20,6 +21,7 @@ const OUT = path.join(ROOT, 'out');
 
 const args = process.argv.slice(2);
 const withPreviews = args.includes('--previews');
+const inBatch = args.includes('--batch');
 const only = args.filter((a) => !a.startsWith('--'));
 
 const files = fs.readdirSync(LIB)
@@ -30,6 +32,21 @@ const files = fs.readdirSync(LIB)
 if (!files.length) {
   console.error(`no components matched${only.length ? `: ${only.join(', ')}` : ''}`);
   process.exit(1);
+}
+
+// The gate renders several 1920×1080 frames per component. A single process over all 180
+// components gets OOM-killed on CI runners, so run fixed-size batches in child processes.
+const batchSize = Number(args.find((a) => a.startsWith('--batch-size='))?.slice(13) || 10);
+if (!inBatch && files.length > batchSize) {
+  let failed = 0;
+  for (let i = 0; i < files.length; i += batchSize) {
+    const chunk = files.slice(i, i + batchSize);
+    const childArgs = [path.join(ROOT, 'scripts', 'gate-all.mjs'), ...chunk, '--batch'];
+    if (withPreviews) childArgs.push('--previews');
+    const r = spawnSync(process.execPath, childArgs, { stdio: 'inherit' });
+    if (r.status !== 0) failed++;
+  }
+  process.exit(failed ? 1 : 0);
 }
 
 setupClawdCanvas();
